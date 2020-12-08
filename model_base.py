@@ -1,12 +1,13 @@
 #%%
 import torch 
 import torchvision
+import time
 from abc import ABC, abstractmethod
 import shutil
 import os
 
-
 class Model(ABC):
+
 
     def __init__(self, args):
 
@@ -17,7 +18,7 @@ class Model(ABC):
         self.criterion = lambda : 1
         self.counter = {'epochs': 0, 'batches': 0}
         self.network = torch.nn.Module()
-        self.early_stopping = EarlyStopping(args=args)
+        self.early_stopping = EarlyStopping(args=args, out_path=args.out_path)
         self.device = args.device
         self.dataset = None
 
@@ -59,12 +60,14 @@ class Model(ABC):
             if optimizer is not None:
                 optimizer.zero_grad()
 
-
-
 class EarlyStopping:
     """Early stopping AND saver !
     """
-    def __init__(self,args):
+    def __init__(self, args, out_path=None):
+        if not out_path:
+            out_path = os.path.join('.', 'outputs', time.ctime().replace(' ', '_').replace(':', '.'))
+        self.out_path = out_path
+        os.makedirs(out_path, exist_ok=True)
         self.patience = args.patience
         self.counter = 0
         self.loss_min = None

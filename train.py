@@ -45,7 +45,10 @@ def val(model, dataloader):
         model.writer.add_scalar("Validation_loss_{}".format(model.name), loss, model.counter['batches'])
         model.writer.add_scalar("Validation_acc_{}".format(model.name), accuracy, model.counter['batches'])
     is_best = model.early_stopping(accuracy, state, model.name, minim=False)
-    print(make_message(loss, accuracy, model.counter['epochs'], is_best))
+    msg = make_message(loss, accuracy, model.counter['epochs'], is_best)
+    print(msg)
+    with open(os.path.join(model.early_stopping.out_path, 'learning.log'), 'a') as f:
+        f.write(msg + "\n")
     
 def get_value(tensor):
     return tensor.detach().cpu().numpy()
