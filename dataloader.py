@@ -1,4 +1,4 @@
-from torchvision.dataset import ImageFolder
+from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
 
@@ -29,17 +29,17 @@ def get_transforms(pretrained, augmented):
                                          std=[0.229, 0.1584, 0.1330])
     if augmented:
         print('Use Augmentation plus')
-        trans =[
+        trans = transforms.Compose([
                 transforms.RandomResizedCrop(256),
                 transforms.RandomHorizontalFlip(),
                 transforms.RandomVerticalFlip(),
                 RandomRotate90(),
-                transform.ToTensor(),
+                transforms.ToTensor(),
                 normalize
-                ]
+                ])
     else:
-        trans = [
-                transform.ToTensor(),
+        trans = transforms.Compose([
+                transforms.ToTensor(),
                 normalize
-                ]
+                ])
     return trans

@@ -8,6 +8,7 @@ def get_parser():
     parser.add_argument("--out_path", type=str, default=None, help='path to write the outputs')
     parser.add_argument("--batch_size", type=int, help="Batch size", default=256)
     parser.add_argument('--model_name', type=str, help='Name of the network to use: resnet18 | resnet50', default='resnet18')
-    parser.add_argument('--pretrained', type=int, help='If >=1 loads the weights trained on imagenet', default=0)
-    parser.add_argument('--frozen', type=int, help='If >= 1, freeze the network except fc layer', default=0)
+    parser.add_argument('--pretrained', action='store_true', help='If >=1 loads the weights trained on imagenet')
+    parser.add_argument('--augmented', action='store_true', help="use augmentations during training ?")
+    parser.add_argument('--frozen', action='store_true', help='If >= 1, freeze the network except fc layer')
     return parser

@@ -32,19 +32,21 @@ def val(model, dataloader):
     model.network.eval()
     accuracy = []
     loss = []
+    y_pred = []
+    y_true=[]
     for input_batch, target_batch in dataloader:
         target_batch = target_batch.to(model.device, dtype=torch.int64)
         output, pred = model.predict(input_batch)
         loss.append(model.criterion(output, target_batch).detach().cpu().numpy())
-        y_pred += pred
-        y_true += target_batch.cpu().numpy()
+        y_pred += list(pred)
+        y_true += list(target_batch.cpu().numpy())
     accuracy = metrics.accuracy_score(y_true, y_pred)
     loss = np.mean(loss)
     state = model.make_state()
     if model.writer:
         model.writer.add_scalar("Validation_loss_{}".format(model.name), loss, model.counter['batches'])
         model.writer.add_scalar("Validation_acc_{}".format(model.name), accuracy, model.counter['batches'])
-    is_best = model.early_stopping(accuracy, state, model.name, minim=False)
+    is_best = model.early_stopping(accuracy, state, minim=False)
     msg = make_message(loss, accuracy, model.counter['epochs'], is_best)
     print(msg)
     with open(os.path.join(model.early_stopping.out_path, 'learning.log'), 'a') as f:
@@ -57,8 +59,8 @@ def main():
     args = get_parser().parse_args()
 
     # Make datasets
-    train_dir = os.path.join(args.train_dir,'train')
-    val_dir = os.path.join(args.val_dir, 'val')
+    train_dir = os.path.join(args.datadir,'train')
+    val_dir = os.path.join(args.datadir, 'val')
     train_loader = get_dataloader(train_dir, args.batch_size, args.pretrained, args.augmented)
     val_loader = get_dataloader(val_dir, args.batch_size, args.pretrained, False)
 
@@ -69,7 +71,6 @@ def main():
     model = Classifier(args=args)
 
     while model.counter['epochs'] < args.epochs:
-        print("Begin training")
         train(model=model, dataloader=train_loader)
         val(model=model, dataloader=val_loader)
         if model.early_stopping.early_stop:

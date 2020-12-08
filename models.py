@@ -16,7 +16,7 @@ class Classifier(Model):
         optimizer = torch.optim.Adam(self.network.parameters())
         self.optimizers = [optimizer]
         self.get_schedulers()
-        self.writer = self.get_writer()
+        self.writer = self.get_writer(writer)
 
     def optimize_parameters(self, input_batch, target_batch):
         input_batch = input_batch.to(self.device)
@@ -28,7 +28,7 @@ class Classifier(Model):
         self.optimizers[0].step()
         return loss
 
-    def get_writer(writer):
+    def get_writer(self, writer):
         if writer:
             writer = SummaryWriter(self.get_folder_writer())
         else:
@@ -43,9 +43,7 @@ class Classifier(Model):
         x = x.to(self.device)
         output = self.forward(x)
         proba = torch.nn.functional.softmax(output, dim=1)
-        _, preds = torch.max(proba, dim=1)
-        proba_positif = proba[:,1]
-        assert [round(x) for x in proba_positif.detach().cpu().numpy()] == list(preds)
+        preds = torch.argmax(proba, dim=1)
         return output, np.array(preds.detach().cpu().numpy())
 
     def get_network(self):

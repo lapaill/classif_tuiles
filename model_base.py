@@ -68,14 +68,14 @@ class EarlyStopping:
             out_path = os.path.join('.', 'outputs', time.ctime().replace(' ', '_').replace(':', '.'))
         self.out_path = out_path
         os.makedirs(out_path, exist_ok=True)
-        self.patience = args.patience
+        self.patience = args.epochs
         self.counter = 0
         self.loss_min = None
         self.early_stop = False
         self.is_best = False
-        self.filename = 'model.pt.tar'
+        self.filename = os.path.join(self.out_path, 'model.pt.tar')
 
-    def __call__(self, loss, state, name, minim):
+    def __call__(self, loss, state, minim):
 
         #####################
         ## Learning begins ##
@@ -109,9 +109,9 @@ class EarlyStopping:
             self.counter = 0
             return self.is_best
         
-        self.save_checkpoint(state, name)
+        self.save_checkpoint(state)
 
-    def save_checkpoint(self, state, name):
-        torch.save(state, 'model' + name + '.pt.tar')
+    def save_checkpoint(self, state):
+        torch.save(state, self.filename)
         if self.is_best:
             shutil.copyfile(self.filename, self.filename.replace('.pt.tar','_best.pt.tar'))
