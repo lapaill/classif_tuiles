@@ -4,6 +4,11 @@ import numpy as np
 import torch
 from tensorboardX import SummaryWriter
 
+import Equinet
+from Equinet import wrn28_10_d8d4d1, WideBasic
+import e2cnn.nn as enn
+
+
 class Classifier(Model):
     def __init__(self, args, writer=False):
         super(Classifier, self).__init__(args)
@@ -38,7 +43,7 @@ class Classifier(Model):
     def forward(self, x):
         out = self.network(x)
         return out
-    
+
     def predict(self, x):
         x = x.to(self.device)
         output = self.forward(x)
@@ -47,9 +52,10 @@ class Classifier(Model):
         return output, np.array(preds.detach().cpu().numpy())
 
     def get_network(self):
-        networks ={
+        networks = {
             "resnet18": (models.resnet18(pretrained=self.pretrained), 512),
-            "resnet50": (models.resnet50(pretrained=self.pretrained), 2048)
+            "resnet50": (models.resnet50(pretrained=self.pretrained), 2048),
+            "equi": (Equinet.small_wrn(4), 256)
         }
         network, in_features = networks[self.model_name]
         network.fc = torch.nn.Linear(in_features=in_features, out_features=self.num_class)
@@ -65,7 +71,7 @@ class Classifier(Model):
 
     def make_state(self):
         dictio = {'state_dict': self.network.state_dict(),
-                  'state_dict_optimizer': self.optimizers[0].state_dict, 
-                  'state_scheduler': self.schedulers[0].state_dict(), 
+                  'state_dict_optimizer': self.optimizers[0].state_dict,
+                  'state_scheduler': self.schedulers[0].state_dict(),
                   'inner_counter': self.counter}
         return dictio

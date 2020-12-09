@@ -9,8 +9,9 @@ from sklearn.model_selection import StratifiedKFold
 import numpy as np
 # Local imports
 from arguments import get_parser
-from models import Classifier 
+from models import Classifier
 from dataloader import get_dataloader
+
 
 def make_message(loss, accuracy, epoch, is_best):
     msg = "Validation results, EPOCH {} : Loss {} | Accuracy {}".format(epoch, loss, accuracy)
@@ -18,22 +19,25 @@ def make_message(loss, accuracy, epoch, is_best):
         msg = msg.upper()
     return msg
 
+
 def train(model, dataloader):
     model.network.train()
     for input_batch, target_batch in dataloader:
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
         mean_loss = get_value(loss)
+        print("done")
         if model.writer:
             model.writer.add_scalar("Training_loss_{}".format(model.name), mean_loss, model.counter['batches'])
     model.counter['epochs'] += 1
+
 
 def val(model, dataloader):
     model.network.eval()
     accuracy = []
     loss = []
     y_pred = []
-    y_true=[]
+    y_true = []
     for input_batch, target_batch in dataloader:
         target_batch = target_batch.to(model.device, dtype=torch.int64)
         output, pred = model.predict(input_batch)
@@ -51,22 +55,24 @@ def val(model, dataloader):
     print(msg)
     with open(os.path.join(model.early_stopping.out_path, 'learning.log'), 'a') as f:
         f.write(msg + "\n")
-    
+
+
 def get_value(tensor):
     return tensor.detach().cpu().numpy()
+
 
 def main():
     args = get_parser().parse_args()
 
     # Make datasets
-    train_dir = os.path.join(args.datadir,'train')
+    train_dir = os.path.join(args.datadir, 'train')
     val_dir = os.path.join(args.datadir, 'val')
     train_loader = get_dataloader(train_dir, args.batch_size, args.pretrained, args.augmented)
     val_loader = get_dataloader(val_dir, args.batch_size, args.pretrained, False)
 
     args.num_class = len(train_loader.dataset.classes)
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
- 
+
     ## Initialisation model
     model = Classifier(args=args)
 
@@ -77,6 +83,7 @@ def main():
             break
     if model.writer:
         model.writer.close()
+
 
 if __name__ == "__main__":
     main()
