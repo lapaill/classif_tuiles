@@ -26,7 +26,6 @@ def train(model, dataloader):
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
         mean_loss = get_value(loss)
-        print("done")
         if model.writer:
             model.writer.add_scalar("Training_loss_{}".format(model.name), mean_loss, model.counter['batches'])
     model.counter['epochs'] += 1
@@ -74,7 +73,7 @@ def main():
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     ## Initialisation model
-    model = Classifier(args=args)
+    model = Classifier(args=args, writer=True)
 
     while model.counter['epochs'] < args.epochs:
         train(model=model, dataloader=train_loader)

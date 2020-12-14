@@ -13,6 +13,7 @@ class Classifier(Model):
     def __init__(self, args, writer=False):
         super(Classifier, self).__init__(args)
         self.model_name = args.model_name
+        self.name = args.name
         self.pretrained = args.pretrained
         self.num_class = args.num_class
         self.frozen = args.frozen
