@@ -13,6 +13,7 @@ from models import Classifier
 from dataloader import get_dataloader
 from tqdm import tqdm
 
+
 def make_message(loss, accuracy, epoch, is_best):
     msg = "Validation results, EPOCH {} : Loss {} | Accuracy {}".format(epoch, loss, accuracy)
     if is_best:
@@ -23,12 +24,10 @@ def make_message(loss, accuracy, epoch, is_best):
 def train(model, dataloader):
     model.network.train()
     for input_batch, target_batch in tqdm(dataloader):
-        print('done')
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
-        mean_loss = get_value(loss)
         if model.writer:
-            model.writer.add_scalar("Training_loss_{}".format(model.name), mean_loss, model.counter['batches'])
+            model.writer.add_scalar("Training_loss_{}".format(model.name), loss, model.counter['batches'])
     model.counter['epochs'] += 1
 
 
@@ -41,9 +40,9 @@ def val(model, dataloader):
     for input_batch, target_batch in dataloader:
         target_batch = target_batch.to(model.device, dtype=torch.int64)
         output, pred = model.predict(input_batch)
-        loss.append(model.criterion(output, target_batch).detach().cpu().numpy())
+        loss.append(model.criterion(output, target_batch).item())
         y_pred += list(pred)
-        y_true += list(target_batch.cpu().numpy())
+        y_true += list(get_value(target_batch))
     accuracy = metrics.accuracy_score(y_true, y_pred)
     loss = np.mean(loss)
     state = model.make_state()

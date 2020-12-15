@@ -32,7 +32,7 @@ class Classifier(Model):
         loss = self.criterion(output_batch, target_batch)
         loss.backward()
         self.optimizers[0].step()
-        return loss
+        return loss.item()
 
     def get_writer(self, writer):
         if writer:
@@ -47,9 +47,10 @@ class Classifier(Model):
 
     def predict(self, x):
         x = x.to(self.device)
-        output = self.forward(x)
-        proba = torch.nn.functional.softmax(output, dim=1)
-        preds = torch.argmax(proba, dim=1)
+        with torch.no_grad():
+            output = self.forward(x)
+            proba = torch.nn.functional.softmax(output, dim=1)
+            preds = torch.argmax(proba, dim=1)
         return output, np.array(preds.detach().cpu().numpy())
 
     def get_network(self):

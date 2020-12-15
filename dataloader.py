@@ -1,24 +1,28 @@
 from torchvision.datasets import ImageFolder
 from torchvision.transforms import transforms
 from torch.utils.data import DataLoader
+import numpy as np
+
 
 class RandomRotate90(object):
-     def __init__(self, choice='uniform'):
-         self.choice = choice
+    def __init__(self, choice='uniform'):
+        self.choice = choice
 
-     def _get_param(self):
-         if self.choice == 'uniform':
-             k = np.random.choice([0, 90, 180, 270])
-         return k
+    def _get_param(self):
+        if self.choice == 'uniform':
+            k = np.random.choice([0, 90, 180, 270])
+        return k
 
-     def __call__(self, img):
-         angle = self._get_param()
-         return vision_F.rotate(img, angle)
+    def __call__(self, img):
+        angle = self._get_param()
+        return vision_F.rotate(img, angle)
+
 
 def get_dataloader(datadir, batch_size, pretrained, augmented):
     dataset = ImageFolder(datadir, transform=get_transforms(pretrained, augmented))
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataloader
+
 
 def get_transforms(pretrained, augmented):
     if pretrained:
@@ -30,16 +34,16 @@ def get_transforms(pretrained, augmented):
     if augmented:
         print('Use Augmentation plus')
         trans = transforms.Compose([
-                transforms.RandomResizedCrop(256),
-                transforms.RandomHorizontalFlip(),
-                transforms.RandomVerticalFlip(),
-                RandomRotate90(),
-                transforms.ToTensor(),
-                normalize
-                ])
+            transforms.RandomResizedCrop(256),
+            transforms.RandomHorizontalFlip(),
+            transforms.RandomVerticalFlip(),
+            RandomRotate90(),
+            transforms.ToTensor(),
+            normalize
+        ])
     else:
         trans = transforms.Compose([
-                transforms.ToTensor(),
-                normalize
-                ])
+            transforms.ToTensor(),
+            normalize
+        ])
     return trans
