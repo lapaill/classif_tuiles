@@ -58,6 +58,71 @@ class WideBasic(enn.EquivariantModule):
             self.shortcut = conv1x1(self.in_type, self.out_type, stride=stride, bias=False)
 
     def forward(self, x):
+        x_n = self.relu1(self.bn1(x))
+        out = self.relu2(self.bn2(self.conv1(x_n)))
+        out = self.dropout(out)
+        out = self.conv2(out)
+
+        if self.shortcut is not None:
+            out += self.shortcut(x_n)
+        else:
+            out += x
+        return out
+
+    def evaluate_output_shape(self, input_shape: Tuple):
+        assert len(input_shape) == 4
+        assert input_shape[1] == self.in_type.size
+        if self.shortcut is not None:
+            return self.shortcut.evaluate_output_shape(input_shape)
+        else:
+            return input_shape
+
+
+class Small_Standalone(torch.nn.Module):
+    def __init__(self,
+                 in_type: enn.FieldType,
+                 inner_type: enn.FieldType,
+                 dropout_rate: float,
+                 stride: int = 1,
+                 out_type: enn.FieldType = None,
+                 ):
+        super(Small_Standalone, self).__init__()
+
+        if out_type is None:
+            out_type = in_type
+
+        self.in_type = in_type
+        inner_type = inner_type
+        self.out_type = out_type
+
+        if isinstance(in_type.gspace, gspaces.FlipRot2dOnR2):
+            rotations = in_type.gspace.fibergroup.rotation_order
+        elif isinstance(in_type.gspace, gspaces.Rot2dOnR2):
+            rotations = in_type.gspace.fibergroup.order()
+        else:
+            rotations = 0
+
+        if rotations in [0, 2, 4]:
+            conv = conv3x3
+        else:
+            conv = conv5x5
+
+        self.bn1 = enn.InnerBatchNorm(self.in_type)
+        self.relu1 = enn.ReLU(self.in_type, inplace=True)
+        self.conv1 = conv(self.in_type, inner_type)
+
+        self.bn2 = enn.InnerBatchNorm(inner_type)
+        self.relu2 = enn.ReLU(inner_type, inplace=True)
+
+        self.dropout = enn.PointwiseDropout(inner_type, p=dropout_rate)
+
+        self.conv2 = conv(inner_type, self.out_type, stride=stride)
+
+        self.shortcut = None
+        if stride != 1 or self.in_type != self.out_type:
+            self.shortcut = conv1x1(self.in_type, self.out_type, stride=stride, bias=False)
+
+    def forward(self, x):
         if isinstance(x, enn.GeometricTensor):
             assert x.type == self.in_type
         else:
@@ -96,7 +161,7 @@ def small_wrn(N=4):
     r1 = enn.FieldType(gspace, [gspace.trivial_repr] * 3)
     r2 = enn.FieldType(gspace, [gspace.regular_repr] * 3)
     rout = enn.FieldType(gspace, [gspace.trivial_repr] * 256)
-    wrn = WideBasic(in_type=r1, out_type=rout, inner_type=r2, dropout_rate=0.3)
+    wrn = Small_Standalone(in_type=r1, out_type=rout, inner_type=r2, dropout_rate=0.3)
     model = nn.Sequential(OrderedDict([
         ('wrn', wrn),
         ('fc', nn.ReLU())]))
