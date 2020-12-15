@@ -5,7 +5,7 @@ import torch
 from tensorboardX import SummaryWriter
 
 import Equinet
-from Equinet import wrn28_10_d8d4d1, WideBasic
+from Equinet import wrn28_10_d8d4d1, WideBasic, Wide_ResNet
 import e2cnn.nn as enn
 
 
@@ -53,6 +53,13 @@ class Classifier(Model):
         return output, np.array(preds.detach().cpu().numpy())
 
     def get_network(self):
+        if self.model_name == "equiwrn":
+            network = Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0)
+            if self.frozen:
+                self.freeze_net(network)
+            network = network.to(self.device)
+            return network
+
         networks = {
             "resnet18": (models.resnet18(pretrained=self.pretrained), 512),
             "resnet50": (models.resnet50(pretrained=self.pretrained), 2048),

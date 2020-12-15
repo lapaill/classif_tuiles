@@ -58,7 +58,10 @@ class WideBasic(enn.EquivariantModule):
             self.shortcut = conv1x1(self.in_type, self.out_type, stride=stride, bias=False)
 
     def forward(self, x):
-        x = enn.GeometricTensor(x, self.in_type)
+        if isinstance(x, enn.GeometricTensor):
+            assert x.type == self.in_type
+        else:
+            x = enn.GeometricTensor(x, self.in_type)
         x_n = self.relu1(self.bn1(x))
         out = self.relu2(self.bn2(self.conv1(x_n)))
         out = self.dropout(out)
@@ -373,7 +376,10 @@ class Wide_ResNet(torch.nn.Module):
 
     def features(self, x):
 
-        x = enn.GeometricTensor(x, self.in_type)
+        if isinstance(x, enn.GeometricTensor):
+            assert x.type == self.in_type
+        else:
+            x = enn.GeometricTensor(x, self.in_type)
 
         out = self.conv1(x)
 
@@ -388,7 +394,10 @@ class Wide_ResNet(torch.nn.Module):
     def forward(self, x):
 
         # wrap the input tensor in a GeometricTensor
-        x = enn.GeometricTensor(x, self.in_type)
+        if isinstance(x, enn.GeometricTensor):
+            assert x.type == self.in_type
+        else:
+            x = enn.GeometricTensor(x, self.in_type)
 
         out = self.conv1(x)
         out = self.layer1(out)

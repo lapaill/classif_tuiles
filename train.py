@@ -11,7 +11,7 @@ import numpy as np
 from arguments import get_parser
 from models import Classifier
 from dataloader import get_dataloader
-
+from tqdm import tqdm
 
 def make_message(loss, accuracy, epoch, is_best):
     msg = "Validation results, EPOCH {} : Loss {} | Accuracy {}".format(epoch, loss, accuracy)
@@ -22,7 +22,8 @@ def make_message(loss, accuracy, epoch, is_best):
 
 def train(model, dataloader):
     model.network.train()
-    for input_batch, target_batch in dataloader:
+    for input_batch, target_batch in tqdm(dataloader):
+        print('done')
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
         mean_loss = get_value(loss)
