@@ -1,45 +1,45 @@
-from model_base import Model
 from torchvision import models
 import numpy as np
 import torch
 from tensorboardX import SummaryWriter
+import os
 
 import Equinet
-from Equinet import wrn28_10_d8d4d1, WideBasic, Wide_ResNet
-import e2cnn.nn as enn
+from utils import EarlyStopping
 
 
-class Classifier(Model):
-    def __init__(self, args, writer=False):
-        super(Classifier, self).__init__(args)
+class Classifier():
+    def __init__(self, args):
+        self.args = args
+
         self.model_name = args.model_name
         self.name = args.name
+        self.counter = {'epochs': 0, 'batches': 0}
+        out_path = os.path.join('results', 'trained_models', args.name)
+        log_path = os.path.join('results', 'logs', args.name)
+        os.makedirs(out_path, exist_ok=True)
+        os.makedirs(log_path, exist_ok=True)
+        self.early_stopping = EarlyStopping(epochs=args.epochs, out_path=out_path)
+        self.writer = SummaryWriter(log_path)
+
+        self.device = args.device
         self.pretrained = args.pretrained
         self.num_class = args.num_class
         self.frozen = args.frozen
+
         self.network = self.get_network()
         self.criterion = torch.nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.network.parameters())
-        self.optimizers = [optimizer]
-        self.get_schedulers()
-        self.writer = self.get_writer(writer)
+        self.optimizer = torch.optim.Adam(self.network.parameters())
 
     def optimize_parameters(self, input_batch, target_batch):
         input_batch = input_batch.to(self.device)
         target_batch = target_batch.to(self.device)
         output_batch = self.forward(input_batch)
-        self.set_zero_grad()
         loss = self.criterion(output_batch, target_batch)
         loss.backward()
-        self.optimizers[0].step()
+        self.optimizer.step()
+        self.optimizer.zero_grad()
         return loss.item()
-
-    def get_writer(self, writer):
-        if writer:
-            writer = SummaryWriter(self.get_folder_writer())
-        else:
-            writer = None
-        return writer
 
     def forward(self, x):
         out = self.network(x)
@@ -55,18 +55,17 @@ class Classifier(Model):
 
     def get_network(self):
         if self.model_name == "equiwrn":
-            network = Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0, fixparams=False)
+            network = Equinet.Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0, fixparams=False)
             if self.frozen:
                 self.freeze_net(network)
             network = network.to(self.device)
             return network
-
-        networks = {
-            "resnet18": (models.resnet18(pretrained=self.pretrained), 512),
-            "resnet50": (models.resnet50(pretrained=self.pretrained), 2048),
-            "equi": (Equinet.small_wrn(4), 256)
-        }
-        network, in_features = networks[self.model_name]
+        if self.model_name == "resnet18":
+            network, in_features = models.resnet18(pretrained=self.pretrained), 512
+        if self.model_name == "resnet50":
+            network, in_features = models.resnet50(pretrained=self.pretrained), 2048
+        if self.model_name == "equi":
+            network, in_features = Equinet.small_wrn(4), 256
         network.fc = torch.nn.Linear(in_features=in_features, out_features=self.num_class)
         if self.frozen:
             self.freeze_net(network)
@@ -80,7 +79,6 @@ class Classifier(Model):
 
     def make_state(self):
         dictio = {'state_dict': self.network.state_dict(),
-                  'state_dict_optimizer': self.optimizers[0].state_dict,
-                  'state_scheduler': self.schedulers[0].state_dict(),
+                  'state_dict_optimizer': self.optimizer.state_dict,
                   'inner_counter': self.counter}
         return dictio

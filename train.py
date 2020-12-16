@@ -73,7 +73,7 @@ def main():
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     ## Initialisation model
-    model = Classifier(args=args, writer=True)
+    model = Classifier(args=args)
 
     while model.counter['epochs'] < args.epochs:
         train(model=model, dataloader=train_loader)
