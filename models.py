@@ -55,7 +55,7 @@ class Classifier(Model):
 
     def get_network(self):
         if self.model_name == "equiwrn":
-            network = Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0)
+            network = Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0, fixparams=False)
             if self.frozen:
                 self.freeze_net(network)
             network = network.to(self.device)

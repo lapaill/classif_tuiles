@@ -4,6 +4,7 @@
 #SBATCH --error=slurm_out/tt.err
 #SBATCH -p gpu-cbio
 #SBATCH --gres=gpu:1 
+#SBATCH --mem=40000
 
 module load cuda10.1
 
