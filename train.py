@@ -27,7 +27,7 @@ def train(model, dataloader):
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
         if model.writer:
-            model.writer.add_scalar("Training_loss_{}".format(model.name), loss, model.counter['batches'])
+            model.writer.add_scalar("Training_loss", loss, model.counter['batches'])
     model.counter['epochs'] += 1
 
 
@@ -47,8 +47,8 @@ def val(model, dataloader):
     loss = np.mean(loss)
     state = model.make_state()
     if model.writer:
-        model.writer.add_scalar("Validation_loss_{}".format(model.name), loss, model.counter['batches'])
-        model.writer.add_scalar("Validation_acc_{}".format(model.name), accuracy, model.counter['batches'])
+        model.writer.add_scalar("Validation_loss", loss, model.counter['batches'])
+        model.writer.add_scalar("Validation_acc", accuracy, model.counter['batches'])
     is_best = model.early_stopping(accuracy, state, minim=False)
     msg = make_message(loss, accuracy, model.counter['epochs'], is_best)
     print(msg)

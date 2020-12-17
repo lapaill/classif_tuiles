@@ -20,7 +20,7 @@ class RandomRotate90(object):
 
 def get_dataloader(datadir, batch_size, pretrained, augmented):
     dataset = ImageFolder(datadir, transform=get_transforms(pretrained, augmented))
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=10)
     return dataloader
 
 
