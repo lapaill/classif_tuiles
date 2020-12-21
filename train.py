@@ -47,8 +47,8 @@ def val(model, dataloader):
     loss = np.mean(loss)
     state = model.make_state()
     if model.writer:
-        model.writer.add_scalar("Validation_loss", loss, model.counter['batches'])
-        model.writer.add_scalar("Validation_acc", accuracy, model.counter['batches'])
+        model.writer.add_scalar("Validation_loss", loss, model.counter['epochs'])
+        model.writer.add_scalar("Validation_acc", accuracy, model.counter['epochs'])
     is_best = model.early_stopping(accuracy, state, minim=False)
     msg = make_message(loss, accuracy, model.counter['epochs'], is_best)
     print(msg)
