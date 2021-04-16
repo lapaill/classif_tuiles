@@ -1,21 +1,24 @@
+import os
 from argparse import ArgumentParser
+
+import numpy as np
+import pandas as pd
+import sklearn.metrics as metrics
+import torch
+from sklearn.model_selection import StratifiedKFold
 from torch.utils.data import DataLoader, SubsetRandomSampler
 from torchvision.datasets import ImageFolder
-import os
-import pandas as pd
-import torch
-import sklearn.metrics as metrics
-from sklearn.model_selection import StratifiedKFold
-import numpy as np
+from tqdm import tqdm
+
 # Local imports
 from arguments import get_parser
-from models import Classifier
 from dataloader import get_dataloader
-from tqdm import tqdm
+from models import Classifier
 
 
 def make_message(loss, accuracy, epoch, is_best):
-    msg = "Validation results, EPOCH {} : Loss {} | Accuracy {}".format(epoch, loss, accuracy)
+    msg = "Validation results, EPOCH {} : Loss {} | Accuracy {}".format(
+        epoch, loss, accuracy)
     if is_best:
         msg = msg.upper()
     return msg
@@ -27,7 +30,8 @@ def train(model, dataloader):
         model.counter['batches'] += 1
         loss = model.optimize_parameters(input_batch, target_batch)
         if model.writer:
-            model.writer.add_scalar("Training_loss", loss, model.counter['batches'])
+            model.writer.add_scalar(
+                "Training_loss", loss, model.counter['batches'])
     model.counter['epochs'] += 1
 
 
@@ -47,8 +51,10 @@ def val(model, dataloader):
     loss = np.mean(loss)
     state = model.make_state()
     if model.writer:
-        model.writer.add_scalar("Validation_loss", loss, model.counter['epochs'])
-        model.writer.add_scalar("Validation_acc", accuracy, model.counter['epochs'])
+        model.writer.add_scalar("Validation_loss", loss,
+                                model.counter['epochs'])
+        model.writer.add_scalar(
+            "Validation_acc", accuracy, model.counter['epochs'])
     is_best = model.early_stopping(accuracy, state, minim=False)
     msg = make_message(loss, accuracy, model.counter['epochs'], is_best)
     print(msg)
@@ -62,17 +68,19 @@ def get_value(tensor):
 
 def main():
     args = get_parser().parse_args()
-
+    print(args)
     # Make datasets
     train_dir = os.path.join(args.datadir, 'train')
     val_dir = os.path.join(args.datadir, 'val')
-    train_loader = get_dataloader(train_dir, args.batch_size, args.pretrained, args.augmented)
-    val_loader = get_dataloader(val_dir, args.batch_size, args.pretrained, False)
+    train_loader = get_dataloader(
+        train_dir, args.batch_size, args.pretrained, args.augmented)
+    val_loader = get_dataloader(
+        val_dir, args.batch_size, args.pretrained, False)
 
     args.num_class = len(train_loader.dataset.classes)
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    ## Initialisation model
+    # Initialisation model
     model = Classifier(args=args)
 
     while model.counter['epochs'] < args.epochs:
