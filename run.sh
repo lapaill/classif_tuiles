@@ -9,9 +9,13 @@
 
 module load cuda10.1
 
-source ~/anaconda3/etc/profile.d/conda.sh
-conda activate histo
+python train.py \
+    --datadir /mnt/data4/jpaillard/projets/moco/HDF5/data/pcamv1/ \
+    --epochs 50 \
+    --batch_size 256 \
+    --model_name perso \
+    --name first_resnet \
+    --weights_file /mnt/data4/jpaillard/projets/outputs/Hflip-Vflip-GrayScale-GaussianBlur-Crop-Rotate90-HEaug-200/checkpoint_0199.pth.tar \
 
-python train.py --datadir data/test_0 --epochs 50 --batch_size 256 --model_name resnet18 --name first_resnet
 
 
