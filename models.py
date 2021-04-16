@@ -1,10 +1,12 @@
-from torchvision import models
-import numpy as np
-import torch
-from tensorboardX import SummaryWriter
 import os
 
-import Equinet
+import numpy as np
+import torch
+import torchvision.models as models
+from tensorboardX import SummaryWriter
+from torchvision import models as models
+
+#import Equinet
 from utils import EarlyStopping
 
 
@@ -19,13 +21,15 @@ class Classifier():
         log_path = os.path.join('results', 'logs', args.name)
         os.makedirs(out_path, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
-        self.early_stopping = EarlyStopping(epochs=args.epochs, out_path=out_path)
+        self.early_stopping = EarlyStopping(
+            epochs=args.epochs, out_path=out_path)
         self.writer = SummaryWriter(log_path)
 
         self.device = args.device
         self.pretrained = args.pretrained
         self.num_class = args.num_class
         self.frozen = args.frozen
+        self.weights_file = args.weights_file
 
         self.network = self.get_network()
         self.criterion = torch.nn.CrossEntropyLoss()
@@ -54,19 +58,51 @@ class Classifier():
         return output, np.array(preds.detach().cpu().numpy())
 
     def get_network(self):
-        if self.model_name == "equiwrn":
-            network = Equinet.Wide_ResNet(28, 3, 0.3, initial_stride=1, N=12, f=True, r=0, fixparams=False)
-            if self.frozen:
-                self.freeze_net(network)
-            network = network.to(self.device)
-            return network
+        #        if self.model_name == "equiwrn":
+        #            network = Equinet.Wide_ResNet(
+        #                28, 3, 0.3, initial_stride=1, N=12, f=True, r=0, fixparams=False)
+        #            if self.frozen:
+        #                self.freeze_net(network)
+        #            network = network.to(self.device)
+        #            return network
         if self.model_name == "resnet18":
-            network, in_features = models.resnet18(pretrained=self.pretrained), 512
+            network, in_features = models.resnet18(
+                pretrained=self.pretrained), 512
         if self.model_name == "resnet50":
-            network, in_features = models.resnet50(pretrained=self.pretrained), 2048
-        if self.model_name == "equi":
-            network, in_features = Equinet.small_wrn(4), 256
-        network.fc = torch.nn.Linear(in_features=in_features, out_features=self.num_class)
+            network, in_features = models.resnet50(
+                pretrained=self.pretrained), 2048
+#        if self.model_name == "equi":
+#            network, in_features = Equinet.small_wrn(4), 256
+        if self.model_name == 'perso':
+            print("=> creating network '{}'".format('resnet18'))
+            network = models.__dict__['resnet18']()
+
+            in_features = 512
+            if os.path.isfile(self.weights_file):
+                print("=> loading checkpoint '{}'".format(self.weights_file))
+                checkpoint = torch.load(self.weights_file, map_location="cpu")
+
+                # rename moco pre-trained keys
+                state_dict = checkpoint['state_dict']
+                for k in list(state_dict.keys()):
+                    # retain only encoder_q up to before the embedding layer
+                    if k.startswith('module.encoder_q') and not k.startswith('module.encoder_q.fc'):
+                        # remove prefix
+                        state_dict[k[len("module.encoder_q."):]
+                                   ] = state_dict[k]
+                    # delete renamed or unused k
+                    del state_dict[k]
+
+                msg = network.load_state_dict(state_dict, strict=False)
+                assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
+
+                print("=> loaded pre-trained network '{}'".format(self.weights_file))
+                print(network)
+            else:
+                print("=> no checkpoint found at '{}'".format(args.pretrained))
+
+        network.fc = torch.nn.Linear(
+            in_features=in_features, out_features=self.num_class)
         if self.frozen:
             self.freeze_net(network)
         network = network.to(self.device)
@@ -82,3 +118,6 @@ class Classifier():
                   'state_dict_optimizer': self.optimizer.state_dict,
                   'inner_counter': self.counter}
         return dictio
+
+    def __repr__(self):
+        return self.__class__.__name__ + ': \n{}'.format(self.network)
