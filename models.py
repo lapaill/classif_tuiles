@@ -97,7 +97,6 @@ class Classifier():
                 assert set(msg.missing_keys) == {"fc.weight", "fc.bias"}
 
                 print("=> loaded pre-trained network '{}'".format(self.weights_file))
-                print(network)
             else:
                 print("=> no checkpoint found at '{}'".format(args.pretrained))
 
@@ -106,6 +105,7 @@ class Classifier():
         if self.frozen:
             self.freeze_net(network)
         network = network.to(self.device)
+        print(network)
         return network
 
     def freeze_net(self, net):
