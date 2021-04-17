@@ -36,18 +36,29 @@ class HDF5Dataset(Dataset):
         return (x, y)
 
 
-class RandomRotate90(object):
+class RandomRotate90(torch.nn.Module):
+    """
+    Rotate the given image by an angle of [0, 90, 180, 270]°
+    """
+
     def __init__(self, choice='uniform'):
+        super().__init__()
         self.choice = choice
 
     def _get_param(self):
         if self.choice == 'uniform':
-            k = np.random.choice([0, 90, 180, 270])
+            k = int(torch.randint(0, 4, (1,)))
+            k = k*90
+            # Use PyTorch random number generator instead of Numpy's
+            # k = np.random.choice([0, 90, 180, 270])
         return k
 
-    def __call__(self, img):
+    def forward(self, img):
         angle = self._get_param()
-        return vision_F.rotate(img, angle)
+        return img.rotate(angle)
+
+    def __repr__(self):
+        return self.__class__.__name__
 
 
 def get_dataloader(datadir, batch_size, pretrained, augmented):
@@ -67,8 +78,10 @@ def get_transforms(pretrained, augmented):
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
     else:
-        normalize = transforms.Normalize(mean=[0.7364, 0.5600, 0.7052],
-                                         std=[0.229, 0.1584, 0.1330])
+        # normalize = transforms.Normalize(mean=[0.7364, 0.5600, 0.7052],
+        #                                  std=[0.229, 0.1584, 0.1330])
+        normalize = transforms.Normalize(mean=[0.723, 0.515, 0.662],  # Norm TCGA
+                                         std=[0.141, 0.156, 0.131])
     if augmented:
         print('Use Augmentation plus')
         trans = transforms.Compose([
