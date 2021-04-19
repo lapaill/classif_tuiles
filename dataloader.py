@@ -23,7 +23,7 @@ class HDF5Dataset(Dataset):
         self.data = h5py.File(data_file)['x']
         self.labels = h5py.File(labels_file)['y']
         self.transform = transform
-        self.classes = [0, 1]  # à modifier
+        self.classes = list(np.unique(self.labels))
 
     def __len__(self):
         return self.data.shape[0]
