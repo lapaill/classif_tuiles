@@ -75,8 +75,10 @@ def get_dataloader(datadir, batch_size, pretrained, augmented):
 
 def get_transforms(pretrained, augmented):
     if pretrained:
-        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+        #        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+        #                                         std=[0.229, 0.224, 0.225])
+        normalize = transforms.Normalize(mean=[0.723, 0.515, 0.662],  # Norm TCGA
+                                         std=[0.141, 0.156, 0.131])
     else:
         # normalize = transforms.Normalize(mean=[0.7364, 0.5600, 0.7052],
         #                                  std=[0.229, 0.1584, 0.1330])
