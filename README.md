@@ -23,7 +23,7 @@ la valeur rentrée dans l'argument `--model_name`.
 
 # Results of the classification task on PCam
 
-The aim of this work is to optimize a contrastive pretext task for SSL by finding the most relevant transformations to apply to images. The chosen approach is to use momentum contrast (MoCo), a framework developed by Facebook, to train a resnet18 encoder with various image transformations on the TCGA dataset. The learned representations of images have to be both reliable in a wide range of downstream tasks and contain biological meaning. In order to assess the quality of the extracted features, we train a linear classifier on top of them using the benchmark dataset PatchCamelyon (PCam).    
+The aim of this work is to optimize a contrastive pretext task for SSL by finding the most relevant transformations to apply to images. The chosen approach is to use momentum contrast (MoCo), a framework developed by Facebook, to train a resnet18 encoder with various image transformations on the TCGA dataset. The learned representations of images have to be both reliable in a wide range of downstream tasks and contain biological meaning. In order to assess the quality of the extracted features, we train a linear classifier on top of them using the benchmark dataset [PatchCamelyon](http://basveeling.nl/posts/pcam/) (PCam).    
 
 Here are the transformations used to train several feature extractors:   
 
@@ -43,8 +43,9 @@ Here are the transformations used to train several feature extractors:
 Further information on feature extractors:
    * Tristan: trained using MoCo on an other dataset using other transformations (to clarify)
    * Baseline: Resnet18 pre-trained on ImageNet
-   * Random: Resnet18 with random weights
-## Classifier:   
+   * Random: Resnet18 with random weights   
+
+## Classifier:   
 Once the feature extractor has been trained on the TCGA dataset, the Resnet18 model is fine-tuned on the PCam dataset using the following fully connected layers: 
 ```  
 (fc): Sequential(
@@ -54,4 +55,4 @@ Once the feature extractor has been trained on the TCGA dataset, the Resnet18 mo
     (3): Linear(in_features=512, out_features=2, bias=True)
   )
 ```
-![](./assets/results.png)
+![Accuracy on the classification task](./assets/results.png)
