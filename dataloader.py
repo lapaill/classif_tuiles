@@ -68,6 +68,7 @@ def get_dataloader(datadir, batch_size, pretrained, augmented):
     labels = os.path.join(datadir, 'labels.h5')
     dataset = HDF5Dataset(
         data, labels, transform=get_transforms(pretrained, augmented))
+    print('len dataset: {}'.format(len(dataset)))
     dataloader = DataLoader(dataset, batch_size=batch_size,
                             shuffle=True, num_workers=10)
     return dataloader

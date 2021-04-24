@@ -1,9 +1,9 @@
 #!/bin/sh
-#SBATCH --job-name=PCam_baseline
-#SBATCH --output=slurm_out/baseline.out
-#SBATCH --error=slurm_out/baseline.err
+#SBATCH --job-name=PCam_Elastic
+#SBATCH --output=slurm_out/Elastic.out
+#SBATCH --error=slurm_out/Elastic.err
 #SBATCH -p gpu-cbio
-#SBATCH --gres=gpu:1 
+#SBATCH --gres=gpu:1
 #SBATCH --mem=40000
 #SBATCH -c 10
 
@@ -13,8 +13,9 @@ python train.py \
     --datadir /mnt/data4/jpaillard/data/pcamv1 \
     --epochs 50 \
     --model_name resnet18 \
+    --name Elastic \
+    --batch_size 512 \
     --frozen \
     --pretrained \
-    --name baseline \
-    --batch_size 512 \
-#    --weights_file /mnt/data4/jpaillard/projets/outputs/Hflip-Vflip-GrayScale-GaussianBlur-Crop-Rotate90-Jitter-200/checkpoint_0199.pth.tar \
+    --weights_file /mnt/data4/jlaval/moco/outputs/Hflip-Vflip-GrayScale-GaussianBlur-Rotate90-Jitter-MultipleElasticDistort-resume200/checkpoint_0199.pth.tar \
+

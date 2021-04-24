@@ -78,12 +78,12 @@ def main():
         torch.nn.Dropout(p=0.5),
         torch.nn.Linear(in_features=512, out_features=2))
 
-#    print("=> loading model from state dict '{}'".format(args.state_dict))
-#    weights_file = torch.load(args.state_dict, map_location="cpu")
-#    state_dict = weights_file['state_dict']
-#    print(state_dict.keys())
-#    model.load_state_dict(state_dict)
-#    print('model loaded successfully')
+    print("=> loading model from state dict '{}'".format(args.state_dict))
+    weights_file = torch.load(args.state_dict, map_location="cpu")
+    state_dict = weights_file['state_dict']
+    print(state_dict.keys())
+    model.load_state_dict(state_dict)
+    print('model loaded successfully')
 
     test_batch = next(iter(test_loader))
     test_input, test_target = test_batch

@@ -22,7 +22,7 @@ class Classifier():
         os.makedirs(out_path, exist_ok=True)
         os.makedirs(log_path, exist_ok=True)
         self.early_stopping = EarlyStopping(
-            epochs=args.epochs, out_path=out_path)
+            epochs=args.epochs // 5, out_path=out_path)
         self.writer = SummaryWriter(log_path)
 
         self.device = args.device
@@ -33,7 +33,8 @@ class Classifier():
 
         self.network = self.get_network()
         self.criterion = torch.nn.CrossEntropyLoss()
-        self.optimizer = torch.optim.Adam(self.network.parameters())
+        self.optimizer = torch.optim.Adam(self.network.parameters(), lr=0.0005)
+        print('optimizer: {}'.format(self.optimizer))
 
     def optimize_parameters(self, input_batch, target_batch):
         input_batch = input_batch.to(self.device)
@@ -100,12 +101,14 @@ class Classifier():
             else:
                 print("=> no checkpoint found at '{}'".format(args.pretrained))
 
-        network.fc = torch.nn.Sequential([
+        network.fc = torch.nn.Sequential(
             torch.nn.BatchNorm1d(512, eps=1e-05, momentum=0.1,
                                  affine=True, track_running_stats=True),
-            torch.nn.Linear(in_features=512, out_features=512, bias=True),
+            torch.nn.Linear(in_features=512,
+                            out_features=512, bias=True),
             torch.nn.ReLU(),
-            torch.nn.Linear(in_features=512, out_features=2, bias=True)])
+            torch.nn.Dropout(p=0.5),
+            torch.nn.Linear(in_features=512, out_features=2, bias=True))
 
         if self.frozen:
             self.freeze_net(network)

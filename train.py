@@ -72,8 +72,10 @@ def main():
     # Make datasets
     train_dir = os.path.join(args.datadir, 'train')
     val_dir = os.path.join(args.datadir, 'val')
+    print('loading train dataset')
     train_loader = get_dataloader(
         train_dir, args.batch_size, args.pretrained, args.augmented)
+    print('loading val dataset')
     val_loader = get_dataloader(
         val_dir, args.batch_size, args.pretrained, False)
 
