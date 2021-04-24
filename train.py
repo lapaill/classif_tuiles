@@ -79,7 +79,7 @@ def main():
     val_loader = get_dataloader(
         val_dir, args.batch_size, args.pretrained, False)
 
-    args.num_class = len(train_loader.dataset.classes)
+    args.num_class = 2  # np.unique(train_loader[1])
     args.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     # Initialisation model
