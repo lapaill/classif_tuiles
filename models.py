@@ -100,8 +100,13 @@ class Classifier():
             else:
                 print("=> no checkpoint found at '{}'".format(args.pretrained))
 
-        network.fc = torch.nn.Linear(
-            in_features=in_features, out_features=self.num_class)
+        network.fc = torch.nn.Sequential([
+            torch.nn.BatchNorm1d(512, eps=1e-05, momentum=0.1,
+                                 affine=True, track_running_stats=True),
+            torch.nn.Linear(in_features=512, out_features=512, bias=True),
+            torch.nn.ReLU(),
+            torch.nn.Linear(in_features=512, out_features=2, bias=True)])
+
         if self.frozen:
             self.freeze_net(network)
         network = network.to(self.device)
