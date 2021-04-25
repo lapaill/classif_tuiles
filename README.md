@@ -46,6 +46,7 @@ Further information on feature extractors:
    * Tristan: trained using MoCo on an other dataset using other transformations (to clarify)
    * Baseline: Resnet18 pre-trained on ImageNet
    * Random: Resnet18 with random weights   
+   * Flatten: small model made of one convolutional layer, a max pooling layer and the same fully connected layers as the others. The first convolution + maxpool was added in order to obtain a reasonable number of parameters in the fully connected layers.   
 
 ## Classifier:   
 Once the feature extractor has been trained on the TCGA dataset, the Resnet18 model is fine-tuned on the PCam dataset using the following fully connected layers: 
