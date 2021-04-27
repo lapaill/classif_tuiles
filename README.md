@@ -28,7 +28,7 @@ The aim of this work is to optimize a contrastive pretext task for SSL by findin
 Here are the transformations used to train several feature extractors:   
 
 
-|              | Flips              | GaussianBlur       | Rotate90           | HEaug              | Jitter             | ElasticDistorsion  | DifferentCrops     | CropAndResize      | N°epochs for MoCo  |
+|              | Flips              |         Blur       | Rotate90           | HEaug              | Jitter             | Elastic            | DiffCrops          | Crop    Resize      |    epochs for MoCo  |
 |--------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|--------------------|
 | Jitter       | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x:                | :heavy_check_mark: | :x:                | :heavy_check_mark: | :x:                | 200                |
 | Elastic      | :heavy_check_mark: | :heavy_check_mark: | :heavy_check_mark: | :x:                | :heavy_check_mark: | :heavy_check_mark:| :heavy_check_mark: | :x:                | 200                |
