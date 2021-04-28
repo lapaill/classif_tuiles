@@ -4,17 +4,20 @@ from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 import numpy as np
 import sklearn.metrics as metrics
 import torch
+from torch.utils.data import DataLoader
 from torchvision import models as models
 
-from dataloader import get_dataloader
+from dataloader import HDF5Dataset, get_dataloader, get_transforms
 from models import Classifier
 
 parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
 parser.add_argument("--state_dict", type=str,
                     help="Path to the weights file")
-parser.add_argument("--test_dir", type=str,
+parser.add_argument("--datadir", type=str,
                     help="Path to the test directory")
-parser.add_argument("--batch_size", type=int, default=256)
+parser.add_argument("--batch_size", type=int, default=64)
+parser.add_argument("--kfolds", type=int,
+                    help="number of folds for cross validation", default=5)
 
 
 def get_value(tensor):
@@ -50,8 +53,8 @@ def eval(model, dataloader, loss_F=torch.nn.CrossEntropyLoss()):
         y_pred += list(pred)
         y_true += list(get_value(target_batch))
         i += 1
-        print('Batch n°{}, batch size: {} loss for this batch: {}'.format(
-            i, len(list(pred)), loss[-1]))
+#        print('Batch n°{}, batch size: {} loss for this batch: {}'.format(
+#            i, len(list(pred)), loss[-1]))
     accuracy = metrics.accuracy_score(y_true, y_pred)
     loss = np.mean(loss)
     msg = make_message(loss, accuracy)
@@ -61,9 +64,6 @@ def eval(model, dataloader, loss_F=torch.nn.CrossEntropyLoss()):
 def main():
     args = parser.parse_args()
     print('loading test dataset')
-    test_loader = get_dataloader(
-        args.test_dir, args.batch_size, True, False)
-
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     device = 'cpu'
     print('device: {}'.format(device))
@@ -85,22 +85,23 @@ def main():
     model.load_state_dict(state_dict)
     print('model loaded successfully')
 
-    test_batch = next(iter(test_loader))
-    test_input, test_target = test_batch
-    test_input = test_input.to(device)
-    output = predict(model, test_input)
-    test_target = test_target.to('cpu', dtype=torch.int64)
-    loss = []
-    y_pred = []
-    y_true = []
-    output, pred = predict(model, test_input)
-    loss_f = torch.nn.CrossEntropyLoss()
-    loss.append(
-        loss_f(output, test_target).item())
-    print('loss test: {}'.format(loss))
-    y_pred += list(pred)
-    y_true += list(get_value(test_target))
-    eval(model, test_loader)
+    data = os.path.join(args.datadir, 'data.h5')
+    labels = os.path.join(args.datadir, 'labels.h5')
+    dataset = HDF5Dataset(
+        data, labels, transform=get_transforms(True, False))
+    print('len dataset: {}'.format(len(dataset)))
+
+    print('len dataset: {}'.format(len(dataset)))
+    len_sbset = int(len(dataset) // args.kfolds)
+
+    for k in range(args.kfolds):
+        indices = np.arange(k*len_sbset, (k+1)*len_sbset)
+        subset = torch.utils.data.Subset(dataset, indices)
+        print('len subset: {}'.format(len(subset)))
+        val_loader = DataLoader(
+            dataset, batch_size=args.batch_size, shuffle=True, num_workers=10)
+        print('K-fold n°{}'.format(k))
+        eval(model, val_loader)
 
 
 if __name__ == "__main__":
